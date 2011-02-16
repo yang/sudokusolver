@@ -50,12 +50,12 @@ taken=set(xrange(1,10))
 
 debug=0
 from cProfile import *
-inrow=[Set(mat[r][c] for c in dim) for r in dim]
-incol=[Set(mat[r][c] for r in dim) for c in dim]
-ingrp=[Set(mat[r][c] for r,c in grp) for grp in grps]
-def rec(nfilled, sure):
+def rec(mat, nfilled, sure):
   if nfilled == 9**2: return copy.deepcopy(mat)
   def indent(): return ' '*(2*(nfilled-nfilled0)-1)
+  inrow=[Set(mat[r][c] for c in dim) for r in dim]
+  incol=[Set(mat[r][c] for r in dim) for c in dim]
+  ingrp=[Set(mat[r][c] for r,c in grp) for grp in grps]
   incell=[[taken if mat[r][c] else inrow[r] | incol[c] | ingrp[grpof(r,c)] for c in dim] for r in dim]
   def genopts():
     for n in nums:
@@ -71,18 +71,12 @@ def rec(nfilled, sure):
   if debug and len(bestopts) > 1: print indent(), bestopts
   for r,c,n in bestopts:
     if debug: print indent(), 'trying', (r,c,n), 'nfilled', nfilled, 'sure' if sure else ''
-    mat[r][c] = n
-    incol[c].add(n)
-    inrow[r].add(n)
-    ingrp[grpof(r,c)].add(n)
-    res = rec(nfilled+1, sure and len(bestopts)==1)
-    mat[r][c] = None
-    incol[c].remove(n)
-    inrow[r].remove(n)
-    ingrp[grpof(r,c)].remove(n)
+    mat2 = copy.deepcopy(mat)
+    mat2[r][c]=n
+    res = rec(mat2, nfilled+1, sure and len(bestopts)==1)
     if res is not None: return res
 nfilled0 = sum(sum(1 if x is not None else 0 for x in row) for row in mat)
-mat = rec(nfilled0, True)
+mat = rec(mat, nfilled0, True)
 print '\n'.join(''.join(' ' if c is None else str(c) for c in line) for line in mat)
 
 # vim: et sw=2 ts=2
